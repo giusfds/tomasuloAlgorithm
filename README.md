@@ -12,7 +12,7 @@
 
 ---
 
-## 📋 Características
+## Características
 
 - ✅ **Algoritmo de Tomasulo Completo**: Implementação fiel com Reservation Stations e Register Renaming
 - ✅ **Buffer de Reordenamento (ROB)**: Garante commit em ordem e suporta execução especulativa
@@ -23,7 +23,7 @@
 - ✅ **Métricas Detalhadas**: IPC, ciclos de bolha, taxa de acerto de desvios
 - ✅ **Exemplos Educacionais**: Programas MIPS demonstrativos
 
-## 🚀 Início Rápido
+## Início Rápido
 
 ### Instalação
 
@@ -53,7 +53,7 @@ python demo.py
 python -m unittest tests/test_simulator.py
 ```
 
-## 🎯 Como Usar
+## Como Usar
 
 ### 1. Escrever/Carregar Código MIPS
 
@@ -89,7 +89,7 @@ A interface mostra em tempo real:
 - **Registradores**: Valores atuais
 - **Métricas**: IPC, bolhas, acertos de desvio
 
-## 📊 Entendendo os Componentes
+## Entendendo os Componentes
 
 ### Reservation Stations
 Buffers que armazenam instruções aguardando execução:
@@ -109,7 +109,7 @@ Permite execução fora de ordem com commit em ordem:
 - **Ciclos de Bolha**: Ciclos onde ROB head não pode fazer commit
 - **Taxa de Acerto**: Precisão do preditor de desvios
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 Tomasulo-Algorithm/
@@ -139,7 +139,7 @@ Tomasulo-Algorithm/
 └── requirements.txt           # Dependências
 ```
 
-## 💡 Exemplos de Código
+## Exemplos de Código
 
 ### Exemplo 1: Hazards de Dados
 ```mips
@@ -182,7 +182,7 @@ Através do ROB, elimina hazards WAR (Write After Read) e WAW (Write After Write
 ### 4. Commit em Ordem
 Apesar da execução fora de ordem, commit é sempre sequencial para manter semântica correta.
 
-## 📈 Métricas Calculadas
+## Métricas Calculadas
 
 | Métrica | Descrição | Fórmula |
 |---------|-----------|---------|
@@ -190,7 +190,7 @@ Apesar da execução fora de ordem, commit é sempre sequencial para manter sem�
 | **Ciclos de Bolha** | Ciclos desperdiçados | Quando ROB head não pode fazer commit |
 | **Taxa de Acerto** | Precisão do preditor | `corretas / total_predições` |
 
-## 🎓 Uso Educacional
+## Uso Educacional
 
 Este simulador foi projetado para fins didáticos:
 
@@ -199,4 +199,92 @@ Este simulador foi projetado para fins didáticos:
 3. **Exemplos Variados**: Diferentes cenários de hazards
 4. **Métricas Detalhadas**: Análise de desempenho
 
-## 📚 Documentação
+## Documentação
+
+- **[Guia do Usuário](docs/USER_GUIDE.md)**: Como usar o simulador
+- **[Documentação Técnica](docs/TECHNICAL.md)**: Detalhes de implementação
+- **[Exemplos](examples/)**: Programas MIPS demonstrativos
+
+## Testes
+
+Execute os testes unitários:
+
+```bash
+python -m unittest tests/test_simulator.py -v
+```
+
+Cobertura de testes:
+- ✅ Parse de instruções MIPS
+- ✅ Execução básica de instruções
+- ✅ Resolução de dependências
+- ✅ Operações de memória
+- ✅ Commit em ordem
+- ✅ Cálculo de métricas
+
+## Requisitos do Trabalho Atendidos
+
+- ✅ Simulador do algoritmo de Tomasulo
+- ✅ Suporte a instruções MIPS
+- ✅ Métricas de desempenho (IPC, ciclos, bolhas)
+- ✅ Interface gráfica educacional
+- ✅ Execução passo a passo
+- ✅ Visualização de despacho, execução e commit
+- ✅ Buffer de reordenamento (ROB)
+- ✅ Especulação de desvios condicionais
+- ✅ Preditor de desvios
+
+## Configurações Avançadas
+
+Você pode customizar o simulador via código:
+
+```python
+from src.core.simulator import TomasuloSimulator
+
+config = {
+    'add_rs': 4,           # Mais RS para ADD/SUB
+    'mul_rs': 3,           # Mais RS para MUL/DIV
+    'rob_size': 32,        # ROB maior
+    'add_latency': 1,      # Latências customizadas
+    'mul_latency': 5,
+}
+
+simulator = TomasuloSimulator(config)
+```
+
+## Troubleshooting
+
+**PyQt5 não instala:**
+```bash
+pip install --upgrade pip
+pip install PyQt5 --no-cache-dir
+```
+
+**Erro ao executar:**
+- Certifique-se de estar na raiz do projeto
+- Verifique se Python 3.7+ está instalado
+- Use `python3` ao invés de `python` se necessário
+
+## Contribuições
+
+Contribuições são bem-vindas! Áreas para melhoria:
+
+- [ ] Mais instruções MIPS
+- [ ] Preditores de desvio mais sofisticados
+- [ ] Simulação de cache
+- [ ] Multiple issue (superescalar real)
+- [ ] Visualização de timeline (Gantt chart)
+
+## Referências
+
+- Tomasulo, R. M. (1967). "An Efficient Algorithm for Exploiting Multiple Arithmetic Units"
+- Hennessy & Patterson. "Computer Architecture: A Quantitative Approach"
+- Patterson & Hennessy. "Computer Organization and Design"
+
+## Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👥 Autores
+
+Desenvolvido para fins educacionais como parte de trabalho acadêmico sobre arquitetura de computadores.
+

@@ -1,0 +1,403 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Configuração de código
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+% Informações do título
+\title{Simulador do Algoritmo de Tomasulo}
+\subtitle{Arquitetura Superescalar com Execução Fora de Ordem}
+\author{Seu Nome}
+\institute{Sua Universidade}
+\date{\today}
+
+\begin{document}
+
+% Slide 1: Título
+\frame{\titlepage}
+
+% Slide 2: Agenda
+\begin{frame}{Agenda}
+    \tableofcontents
+\end{frame}
+
+% Seção 1: Introdução
+\section{Introdução}
+
+\begin{frame}{O que é o Algoritmo de Tomasulo?}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Características Principais:}
+            \begin{itemize}
+                \item Execução fora de ordem (out-of-order)
+                \item Eliminação de hazards de dados
+                \item Register renaming dinâmico
+                \item Despacho dinâmico de instruções
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Motivação:}
+            \begin{itemize}
+                \item Aumentar IPC (Instructions Per Cycle)
+                \item Reduzir stalls por dependências
+                \item Aproveitar paralelismo em nível de instrução
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.5cm}
+    \begin{block}{Objetivo do Simulador}
+        Ferramenta didática para auxiliar no entendimento da arquitetura superescalar e execução out-of-order
+    \end{block}
+\end{frame}
+
+% Seção 2: Arquitetura
+\section{Arquitetura do Simulador}
+
+\begin{frame}{Componentes Principais}
+    \begin{center}
+    \begin{tikzpicture}[
+        node distance=1.5cm,
+        block/.style={rectangle, draw, fill=blue!20, text width=3cm, text centered, rounded corners, minimum height=1cm},
+        arrow/.style={thick,->,>=stealth}
+    ]
+        \node [block] (iq) {Instruction Queue};
+        \node [block, below of=iq] (rs) {Reservation Stations};
+        \node [block, left of=rs, xshift=-2cm] (rob) {Reorder Buffer (ROB)};
+        \node [block, right of=rs, xshift=2cm] (fu) {Functional Units};
+        \node [block, below of=rs] (cdb) {Common Data Bus};
+        \node [block, below of=rob] (reg) {Register File};
+        
+        \draw [arrow] (iq) -- (rs);
+        \draw [arrow] (iq) -- (rob);
+        \draw [arrow] (rs) -- (fu);
+        \draw [arrow] (fu) -- (cdb);
+        \draw [arrow] (cdb) -- (rob);
+        \draw [arrow] (cdb) -- (reg);
+        \draw [arrow] (rob) -- (reg);
+    \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Estruturas de Dados}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Reservation Stations:}
+            \begin{itemize}
+                \item Armazenam instruções aguardando operandos
+                \item Monitoram o Common Data Bus
+                \item Despacham quando prontas
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Reorder Buffer (ROB):}
+            \begin{itemize}
+                \item Mantém ordem do programa
+                \item Permite execução especulativa
+                \item Commit in-order
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Common Data Bus:}
+            \begin{itemize}
+                \item Broadcast de resultados
+                \item Forwarding automático
+                \item Resolve dependências
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Branch Predictor:}
+            \begin{itemize}
+                \item Predição de desvios
+                \item Execução especulativa
+                \item Recovery em misprediction
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Seção 3: Implementação
+\section{Implementação}
+
+\begin{frame}[fragile]{Modularização do Código}
+    \textbf{Estrutura do Projeto (Python):}
+    \begin{lstlisting}[language=bash]
+src/
+├── core/
+│   ├── simulator.py      # Lógica principal
+│   └── structures.py     # RS, ROB, FU
+├── mips/
+│   └── parser.py         # Parser MIPS
+└── gui/
+    └── main_window.py    # Interface PyQt5
+    \end{lstlisting}
+    
+    \vspace{0.3cm}
+    \textbf{Principais Classes:}
+    \begin{itemize}
+        \item \texttt{TomasuloSimulator}: Coordena a simulação
+        \item \texttt{ReservationStation}: Gerencia filas de instruções
+        \item \texttt{ReorderBuffer}: Mantém ordem do programa
+        \item \texttt{FunctionalUnit}: Executa operações
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Pipeline de Execução}
+    \begin{enumerate}
+        \item \textbf{Issue (Despacho):}
+        \begin{itemize}
+            \item Aloca entrada no ROB
+            \item Verifica disponibilidade de Reservation Station
+            \item Register renaming via ROB tags
+        \end{itemize}
+        
+        \item \textbf{Execute (Execução):}
+        \begin{itemize}
+            \item Aguarda operandos disponíveis
+            \item Executa na Functional Unit apropriada
+            \item Latências configuráveis por operação
+        \end{itemize}
+        
+        \item \textbf{Write Result (Escrita):}
+        \begin{itemize}
+            \item Broadcast no Common Data Bus
+            \item Atualiza ROB com resultado
+        \end{itemize}
+        
+        \item \textbf{Commit:}
+        \begin{itemize}
+            \item Commit in-order via ROB
+            \item Atualiza registradores e memória
+            \item Libera recursos
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+% Seção 4: Interface Gráfica
+\section{Interface Gráfica}
+
+\begin{frame}{Funcionalidades da GUI}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Visualização em Tempo Real:}
+            \begin{itemize}
+                \item Estado das Reservation Stations
+                \item Conteúdo do Reorder Buffer
+                \item Registradores e memória
+                \item Common Data Bus
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Controles:}
+            \begin{itemize}
+                \item Execução passo a passo
+                \item Execução contínua
+                \item Reset da simulação
+                \item Carregar programas MIPS
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.5cm}
+    \begin{block}{Objetivo Didático}
+        Permitir que o estudante visualize cada etapa do algoritmo e entenda como as instruções fluem pelo pipeline
+    \end{block}
+\end{frame}
+
+\begin{frame}{Execução Passo a Passo}
+    \textbf{Benefícios Educacionais:}
+    \begin{itemize}
+        \item Ver instruções em diferentes estágios simultaneamente
+        \item Observar resolução de dependências de dados
+        \item Entender o funcionamento do register renaming
+        \item Acompanhar execução especulativa e recovery
+        \item Identificar ciclos de bolha e stalls
+    \end{itemize}
+    
+    \vspace{0.3cm}
+    \textbf{Highlight de Eventos:}
+    \begin{itemize}
+        \item Despacho de instruções
+        \item Início e fim de execução
+        \item Broadcast no CDB
+        \item Commits
+        \item Branch mispredictions
+    \end{itemize}
+\end{frame}
+
+% Seção 5: Métricas
+\section{Métricas de Desempenho}
+
+\begin{frame}{Métricas Implementadas}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Métricas Básicas:}
+            \begin{itemize}
+                \item \textbf{IPC}: Instructions Per Cycle
+                \item \textbf{Total de Ciclos}: Duração da execução
+                \item \textbf{Instruções Executadas}: Total
+                \item \textbf{Ciclos de Bolha}: Stalls
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Métricas Avançadas:}
+            \begin{itemize}
+                \item \textbf{Branch Mispredictions}: Taxa de erro
+                \item \textbf{Utilização de FU}: Ocupação
+                \item \textbf{ROB Stalls}: Bloqueios
+                \item \textbf{Hazards Resolvidos}: RAW, WAR, WAW
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.5cm}
+    \begin{block}{Fórmula do IPC}
+        $$IPC = \frac{\text{Instruções Executadas}}{\text{Total de Ciclos}}$$
+    \end{block}
+\end{frame}
+
+\begin{frame}{Análise de Performance}
+    \textbf{Fatores que Afetam o IPC:}
+    \begin{enumerate}
+        \item \textbf{Dependências de Dados:}
+        \begin{itemize}
+            \item RAW (Read After Write) - verdadeira
+            \item WAR (Write After Read) - resolvida por renaming
+            \item WAW (Write After Write) - resolvida por renaming
+        \end{itemize}
+        
+        \item \textbf{Hazards Estruturais:}
+        \begin{itemize}
+            \item Número limitado de Reservation Stations
+            \item Número limitado de Functional Units
+            \item Tamanho do Reorder Buffer
+        \end{itemize}
+        
+        \item \textbf{Desvios Condicionais:}
+        \begin{itemize}
+            \item Precisão do preditor de desvios
+            \item Custo de recovery em misprediction
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+% Seção 6: Demonstração
+\section{Demonstração}
+
+\begin{frame}[fragile]{Exemplo de Código MIPS}
+    \begin{lstlisting}[language={[mips]Assembler}]
+# Loop simples com dependências
+ADDI R1, R0, 10    # R1 = 10 (contador)
+ADDI R2, R0, 0     # R2 = 0 (soma)
+
+LOOP:
+    ADD R2, R2, R1     # soma += contador
+    SUBI R1, R1, 1     # contador--
+    BNEZ R1, LOOP      # if contador != 0 goto LOOP
+    
+# Resultado em R2 = 55 (soma de 1 a 10)
+    \end{lstlisting}
+    
+    \vspace{0.3cm}
+    \textbf{Observações:}
+    \begin{itemize}
+        \item Dependência RAW entre instruções do loop
+        \item Predição de desvio para trás (taken)
+        \item Paralelismo limitado devido às dependências
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Execução no Simulador}
+    \textbf{Passos da Demonstração:}
+    \begin{enumerate}
+        \item Carregar o programa MIPS
+        \item Configurar parâmetros (RS, ROB, latências)
+        \item Executar passo a passo para ver:
+        \begin{itemize}
+            \item Despacho de múltiplas instruções por ciclo
+            \item Execução paralela quando possível
+            \item Resolução de dependências via forwarding
+            \item Funcionamento do preditor de desvios
+            \item Commits in-order pelo ROB
+        \end{itemize}
+        \item Analisar métricas finais
+    \end{enumerate}
+    
+    \vspace{0.3cm}
+    \centering
+    \textbf{Demonstração ao vivo se houver tempo!}
+\end{frame}
+
+% Seção 7: Conclusão
+\section{Conclusão}
+
+\begin{frame}{Resultados Alcançados}
+    \textbf{Funcionalidades Implementadas:}
+    \begin{itemize}
+        \item[$\checkmark$] Simulador completo do Algoritmo de Tomasulo
+        \item[$\checkmark$] Suporte a instruções MIPS (ALU, Load/Store, Branch)
+        \item[$\checkmark$] Reorder Buffer para execução especulativa
+        \item[$\checkmark$] Preditor de desvios (2-bit counter)
+        \item[$\checkmark$] Interface gráfica educacional (PyQt5)
+        \item[$\checkmark$] Execução passo a passo
+        \item[$\checkmark$] Métricas de desempenho detalhadas
+        \item[$\checkmark$] Exemplos didáticos de programas
+    \end{itemize}
+    
+    \vspace{0.3cm}
+    \begin{block}{Código Aberto}
+        Disponível em: \texttt{github.com/giusfds/Tomasulo-Algorithm}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Trabalhos Futuros}
+    \textbf{Melhorias Possíveis:}
+    \begin{itemize}
+        \item Implementar mais instruções MIPS (floating-point, etc.)
+        \item Adicionar preditor de desvios mais sofisticado (gshare, tournament)
+        \item Suporte a múltiplos níveis de cache
+        \item Visualização 3D do pipeline
+        \item Modo de comparação entre configurações
+        \item Export de métricas para análise estatística
+        \item Suporte a outras ISAs (ARM, RISC-V)
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Perguntas?}
+    \begin{center}
+        \Huge Obrigado!
+        
+        \vspace{1cm}
+        
+        \Large Perguntas?
+        
+        \vspace{1cm}
+        
+        \normalsize
+        \textbf{Contato:} seu-email@universidade.edu
+        
+        \textbf{GitHub:} github.com/giusfds/Tomasulo-Algorithm
+    \end{center}
+\end{frame}
+
+\end{document}
