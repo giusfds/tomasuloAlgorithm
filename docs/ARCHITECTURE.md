@@ -8,23 +8,19 @@
 5. [Fluxo de Execução](#fluxo-de-execução)
 6. [Métricas de Desempenho](#métricas-de-desempenho)
 
----
-
 ## Visão Geral
 
-Este projeto implementa um **simulador educacional do Algoritmo de Tomasulo**, uma técnica de execução fora de ordem (out-of-order execution) que permite o paralelismo em nível de instrução (ILP - Instruction Level Parallelism).
+Este projeto implementa um **simulador do Algoritmo de Tomasulo**, uma técnica de execução fora de ordem (out-of-order execution) que permite o paralelismo em nível de instrução (ILP - Instruction Level Parallelism).
 
 ### Características Principais
-- ✅ Execução fora de ordem com Estações de Reserva
-- ✅ Renomeação de registradores dinâmica
-- ✅ Reorder Buffer (ROB) para commit em ordem
-- ✅ Especulação de desvios com preditor de 2 bits
-- ✅ Interface gráfica educacional
-- ✅ Execução passo a passo
-- ✅ Métricas de desempenho detalhadas
-- ✅ Suporte a instruções MIPS
-
----
+- Execução fora de ordem com Estações de Reserva
+- Renomeação de registradores dinâmica
+- Reorder Buffer (ROB) para commit em ordem
+- Especulação de desvios com preditor de 2 bits
+- Interface gráfica
+- Execução passo a passo
+- Métricas de desempenho detalhadas
+- Suporte a instruções MIPS
 
 ## O Algoritmo de Tomasulo
 
@@ -94,9 +90,9 @@ Rastreia qual estação de reserva ou entrada ROB produzirá o valor de cada reg
 Implementação de preditor de 2 bits (saturating counter):
 ```
 Máquina de Estados:
-    SNT ──0──> WNT ──0──> WT ──0──> ST
+    SNT --0--> WNT --0--> WT --0--> ST
      │          │         │         │
-     └────1─────┴────1────┴────1────┘
+     |____1____-|____1____|____1____|
 
 SNT = Strongly Not Taken
 WNT = Weakly Not Taken  
@@ -132,46 +128,6 @@ ST  = Strongly Taken
    └─ Libera entrada do ROB
 ```
 
----
-
-## Estrutura do Projeto
-
-```
-Tomasulo-Algorithm/
-│
-├── src/                          # Código fonte principal
-│   ├── core/                     # Núcleo do simulador
-│   │   ├── simulator.py          # Motor principal do Tomasulo
-│   │   └── structures.py         # Estruturas de dados (ROB, RS, etc)
-│   │
-│   ├── mips/                     # Suporte a MIPS
-│   │   └── parser.py             # Parser de assembly MIPS
-│   │
-│   └── gui/                      # Interface gráfica
-│       └── main_window.py        # Janela principal (PyQt5)
-│
-├── examples/                     # Programas MIPS de exemplo
-│   ├── example1_basic.asm        # Operações básicas
-│   ├── example2_loop.asm         # Loop simples
-│   ├── example3_memory.asm       # LOAD/STORE
-│   ├── example4_hazards.asm      # Hazards (RAW, WAR, WAW)
-│   ├── example5_parallelism.asm  # ILP
-│   ├── example6_complete.asm     # Exemplo completo
-│   └── example7_branch_loop.asm  # Desvios e loops
-│
-├── tests/                        # Testes unitários
-│   └── test_simulator.py         # Testes do simulador
-│
-├── docs/                         # Documentação
-│   ├── ARCHITECTURE.md           # Este arquivo
-│   ├── TECHNICAL.md              # Detalhes técnicos
-│   └── USER_GUIDE.md             # Guia do usuário
-│
-├── main.py                       # Ponto de entrada (GUI)
-├── demo.py                       # Demo em modo texto
-└── requirements.txt              # Dependências Python
-```
-
 ### Separação de Responsabilidades
 
 #### **core/simulator.py** - Motor do Tomasulo
@@ -201,7 +157,6 @@ Tomasulo-Algorithm/
 - Timeline de instruções
 - Console de log
 
----
 
 ## Implementação Detalhada
 
@@ -443,18 +398,18 @@ class PerformanceMetrics:
         return (productive / self.total_cycles) * 100
 ```
 
-### 4. Interface Gráfica Educacional
+### 4. Interface Gráfica
 
 A GUI é dividida em várias seções para facilitar o aprendizado:
 
 #### Componentes Visuais
 
 **1. Painel de Controle**
-- ▶️ Run: Execução completa
-- ⏯️ Step: Execução passo a passo
-- ⏸️ Pause: Pausa execução
-- ⏹️ Stop: Para e reseta
-- ⚡ Speed: Controle de velocidade
+- Run: Execução completa
+- Step: Execução passo a passo
+- Pause: Pausa execução
+- Stop: Para e reseta
+- Speed: Controle de velocidade
 
 **2. Visualização de Instruções**
 ```
@@ -493,66 +448,6 @@ Entry | Instruction    | State   | Dest | Value | Ready
 - Contadores de hazards
 - Estatísticas de predição de desvios
 
----
-
-## Fluxo de Execução
-
-### Exemplo Completo: Instrução ADD
-
-```assembly
-ADD F0, F2, F4  # F0 = F2 + F4
-```
-
-**Ciclo 1 - ISSUE:**
-```
-1. Verifica ROB tem espaço: ✓
-2. Verifica Add stations tem espaço: ✓ (Add0 livre)
-3. Lê operandos:
-   - F2: valor 2.0 (disponível) → Vj = 2.0, Qj = None
-   - F4: aguardando ROB3 → Vk = None, Qk = ROB3
-4. Adiciona ao ROB[0]:
-   {instruction: "ADD F0, F2, F4", dest: F0, ready: False}
-5. Adiciona a Add0:
-   {busy: True, op: ADD, vj: 2.0, vk: None, qj: None, qk: ROB3}
-6. Atualiza register_status[F0] = ROB0
-```
-
-**Ciclo 2-3 - EXECUTE (esperando):**
-```
-Add0 não pode executar: Qk = ROB3 (operando não disponível)
-```
-
-**Ciclo 4 - ROB3 faz broadcast:**
-```
-CDB: ROB3 = 4.0
-Add0 captura: vk = 4.0, qk = None
-```
-
-**Ciclo 5 - EXECUTE:**
-```
-Add0 agora pode executar (Qj e Qk ambos None)
-Inicia execução: cycles_left = 2
-```
-
-**Ciclo 7 - WRITE RESULT:**
-```
-Add0 completa execução: result = 6.0
-Broadcast no CDB:
-  - ROB[0].value = 6.0, ready = True
-  - Atualiza outras estações esperando por Add0
-Libera Add0
-```
-
-**Ciclo 8 - COMMIT:**
-```
-ROB[0] está no head e ready = True
-registers[F0] = 6.0
-register_status[F0] = None
-ROB.head++
-```
-
----
-
 ## Métricas de Desempenho
 
 ### 1. IPC (Instructions Per Cycle)
@@ -569,31 +464,16 @@ Ciclos onde nenhuma instrução foi despachada devido a:
 
 ### 3. Taxa de Acerto de Predição de Desvios
 ```
-Hit Rate = (Predições Corretas / Total de Desvios) × 100%
+Hit Rate = (Predições Corretas / Total de Desvios) * 100%
 ```
 
 ### 4. Utilização de Recursos
 ```
-Utilização RS = (Ciclos com RS ocupada / Total de Ciclos) × 100%
-Utilização ROB = (Entradas usadas / Tamanho ROB) × 100%
+Utilização RS = (Ciclos com RS ocupada / Total de Ciclos) * 100%
+Utilização ROB = (Entradas usadas / Tamanho ROB) * 100%
 ```
 
 ### 5. Breakdown de Hazards
 - **Estruturais**: ROB/RS cheios
 - **Dados (RAW)**: Dependências verdadeiras
 - **Controle**: Branch mispredictions
-
----
-
-## Conclusão
-
-Este simulador implementa uma versão educacional completa do algoritmo de Tomasulo com:
-
-✅ **Precisão**: Simula fielmente o comportamento do algoritmo
-✅ **Modularidade**: Código organizado e reutilizável  
-✅ **Visualização**: Interface gráfica intuitiva
-✅ **Métricas**: Análise detalhada de desempenho
-✅ **Especulação**: Suporte a desvios e predição
-✅ **Extensibilidade**: Fácil adicionar novas instruções/features
-
-O projeto serve tanto para **estudo do algoritmo** quanto como **base para pesquisa** em arquitetura de computadores.
