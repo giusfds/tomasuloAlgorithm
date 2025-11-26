@@ -220,8 +220,6 @@ class TomasuloSimulator:
                 # Desvio predito como tomado - começar especulação
                 self.speculating = True
                 self.speculation_rob = rob_entry.entry_id
-                # Calcular novo PC (simplificado - usa label)
-                # Em implementação real, calcularia o endereço
                 
         # Avançar PC
         self.pc += 1
@@ -462,8 +460,6 @@ class TomasuloSimulator:
                         self.register_status.clear_dependency(entry.dest)
                 entry.clear()
                 
-        # Ajustar ROB tail
-        # (simplificado - em implementação real seria mais complexo)
         
     def _is_finished(self) -> bool:
         """Verifica se a simulação terminou"""
